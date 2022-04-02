@@ -1,6 +1,7 @@
 
 // document.getElementById('main').style.width = '300px';
 // document.getElementById('main').style.height = '300px';
+var background = chrome.extension.getBackgroundPage();
 
 function rewriteUserAgentHeader(e) {
     var gpc_header = new Headers();
@@ -38,6 +39,7 @@ function getGpcResult(url) {
 
 chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
     let tabURL = tabs[0].url;
+    background.currentURL = tabURL;
     document.getElementById("greeting").innerHTML = tabURL;
     getGpcResult(tabURL);
 });
@@ -58,14 +60,35 @@ if (!navigator.globalPrivacyControl) {
     document.getElementById("changePreference").innerHTML = "Opt out";
 }
 
+function displayList() {
+    let list = document.getElementById("websiteList");
+    while (list.firstChild) {
+        list.removeChild(list.firstChild);
+    }
+    background.websiteList.forEach((item)=>{
+        let li = document.createElement("li");
+        li.innerText = item;
+        list.appendChild(li);
+    })
+}
 
 function onclickFunction() {
     if (!navigator.globalPrivacyControl) {
         navigator.globalPrivacyControl = true;
         document.getElementById("changePreference").innerHTML = "Opt out";
+        if(background.websiteList == undefined){
+            background.websiteList = new Set();
+        }
+        background.websiteList.add(background.currentURL);
+        displayList();
     } else {
         navigator.globalPrivacyControl = false;
         document.getElementById("changePreference").innerHTML = "Opt in";
+        if(background.websiteList == undefined){
+            background.websiteList = new Set();
+        }
+        background.websiteList.delete(background.currentURL);
+        displayList();
     }
     document.getElementById("newPreference").innerHTML = "Updated " + getUserPreference();
 }

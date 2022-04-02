@@ -2,17 +2,20 @@
 "manifest_version": 2,     //required
 "version": "1.1",               //required
 "name": "One-Click Opt-Out",   //required
-"description": "Learning how to make a chrome extension!",
+"description": "You can opt-out information sell by only one click!",
 "icons": {
         "16": "images/butter_16.png",
         "48": "images/butter_48.png",
         "128": "images/butter_128.png"
     },
+"background": {
+    "scripts": ["background.js"]
+},
 "browser_action":
     {
     "default_icon": "images/butter_128.png",
     "default_popup": "popup.html"
     },
-"permissions": ["tabs","webRequest", "<all_urls>","webRequest","webRequestBlocking"],
+"permissions": ["tabs","webRequest", "<all_urls>","webRequest","webRequestBlocking","storage"],
 "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
