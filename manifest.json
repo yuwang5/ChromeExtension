@@ -1,7 +1,7 @@
 {
 "manifest_version": 2,     //required
 "version": "1.1",               //required
-"name": "Hello World!",   //required
+"name": "One-Click Opt-Out",   //required
 "description": "Learning how to make a chrome extension!",
 "icons": {
         "16": "images/butter_16.png",
@@ -13,6 +13,6 @@
     "default_icon": "images/butter_128.png",
     "default_popup": "popup.html"
     },
-"permissions": ["tabs"],
+"permissions": ["tabs","webRequest", "<all_urls>","webRequest","webRequestBlocking"],
 "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

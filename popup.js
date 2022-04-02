@@ -2,6 +2,26 @@
 // document.getElementById('main').style.width = '300px';
 // document.getElementById('main').style.height = '300px';
 
+function rewriteUserAgentHeader(e) {
+    var gpc_header = new Headers();
+    gpc_header.name = "gpc";
+    gpc_header.value = "true";
+    e.requestHeaders.push(gpc_header);
+    e.requestHeaders.forEach(function(header){
+      if (header.name.toLowerCase() == "gpc") {
+        header.value = "true";
+        alert("Has conformed to GPC");
+      }
+    });
+    return {requestHeaders: e.requestHeaders};
+}
+  
+chrome.webRequest.onBeforeSendHeaders.addListener(
+    rewriteUserAgentHeader,
+    {urls: ["https://*/*"]},
+    ["blocking", "requestHeaders"]
+);
+
 function getGpcResult(url) {
     const gpcSuffix = ".well-known/gpc.json";
     jQuery.getJSON(url + gpcSuffix, function(data) {
@@ -16,8 +36,8 @@ function getGpcResult(url) {
     });
 }
 
-chrome.tabs.query({"active": true, "lastFocusedWindow": true}, function (tabs) {
-    const tabURL = tabs[0].url;
+chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+    let tabURL = tabs[0].url;
     document.getElementById("greeting").innerHTML = tabURL;
     getGpcResult(tabURL);
 });
