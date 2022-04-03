@@ -3,41 +3,51 @@
 // document.getElementById('main').style.height = '300px';
 var background = chrome.extension.getBackgroundPage();
 
+// Add a callback when HTML is loaded.
+document.addEventListener('DOMContentLoaded', domLoadedCallback, false);
+// This is a callback method once HTML is loaded. 
+function domLoadedCallback() {
+    // get the origin url 
+    chrome.storage.sync.get('headerJson', function (items) {
+        if (typeof items.headerJson != "undefined") {
+            document.getElementById("changePreference").innerHTML = "Opt out";
+        }
+        else {
+            document.getElementById("changePreference").innerHTML = "Opt in";
+        }
+    });
+    displayList();
+}
+
 function rewriteUserAgentHeader(e) {
     var gpc_header = new Headers();
     gpc_header.name = "gpc";
     gpc_header.value = "true";
     e.requestHeaders.push(gpc_header);
-    e.requestHeaders.forEach(function(header){
-      if (header.name.toLowerCase() == "gpc") {
-        header.value = "true";
-        alert("Has conformed to GPC");
-      }
+    e.requestHeaders.forEach(function (header) {
+        if (header.name.toLowerCase() == "gpc") {
+            header.value = "true";
+            //alert("Has conformed to GPC");
+        }
     });
-    return {requestHeaders: e.requestHeaders};
+
 }
-  
-chrome.webRequest.onBeforeSendHeaders.addListener(
-    rewriteUserAgentHeader,
-    {urls: ["https://*/*"]},
-    ["blocking", "requestHeaders"]
-);
 
 function getGpcResult(url) {
     const gpcSuffix = ".well-known/gpc.json";
-    jQuery.getJSON(url + gpcSuffix, function(data) {
+    jQuery.getJSON(url + gpcSuffix, function (data) {
         if (data.gpc == true) {
             document.getElementById("gpc").innerHTML = "Website abides to GPC";
         } else {
             document.getElementById("gpc").innerHTML = "Website does not abides to GPC";
         }
     })
-    .fail(function() {
-        document.getElementById("gpc").innerHTML = "Website does not have GPC configuration";
-    });
+        .fail(function () {
+            document.getElementById("gpc").innerHTML = "Website does not have GPC configuration";
+        });
 }
 
-chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
+chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
     let tabURL = tabs[0].url;
     background.currentURL = tabURL;
     document.getElementById("greeting").innerHTML = tabURL;
@@ -65,7 +75,7 @@ function displayList() {
     while (list.firstChild) {
         list.removeChild(list.firstChild);
     }
-    background.websiteList.forEach((item)=>{
+    background.websiteList.forEach((item) => {
         let li = document.createElement("li");
         li.innerText = item;
         list.appendChild(li);
@@ -74,17 +84,19 @@ function displayList() {
 
 function onclickFunction() {
     if (!navigator.globalPrivacyControl) {
+        setHeaders();
         navigator.globalPrivacyControl = true;
         document.getElementById("changePreference").innerHTML = "Opt out";
-        if(background.websiteList == undefined){
+        if (background.websiteList == undefined) {
             background.websiteList = new Set();
         }
         background.websiteList.add(background.currentURL);
         displayList();
     } else {
+        removeHeaders();
         navigator.globalPrivacyControl = false;
         document.getElementById("changePreference").innerHTML = "Opt in";
-        if(background.websiteList == undefined){
+        if (background.websiteList == undefined) {
             background.websiteList = new Set();
         }
         background.websiteList.delete(background.currentURL);
@@ -95,4 +107,22 @@ function onclickFunction() {
 
 document.getElementById("changePreference").addEventListener("click", onclickFunction);
 
+function setHeaders() {
+    alert("setheaders");
+    chrome.storage.sync.set({
+        'headerJson': [{ "name": "Sec-GPC", "value": "1" }]
+    }, function () { });
+    chrome.storage.sync.set({
+        'headerInjectionEnable': true
+    }, function () { });
+}
 
+function removeHeaders() {
+    alert("Removed headers");
+    chrome.storage.sync.set({
+        'headerJson': undefined
+    }, function () { });
+    chrome.storage.sync.set({
+        'headerInjectionEnable': false
+    }, function () { });
+}
